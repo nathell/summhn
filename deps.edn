@@ -1,0 +1,5 @@
+{:deps  {com.chimbori.crux/crux {:mvn/version "3.9.0"}
+         skyscraper/skyscraper  {:mvn/version "0.3.2-SNAPSHOT"}
+         cheshire/cheshire      {:mvn/version "5.11.0"}
+         hiccup/hiccup          {:mvn/version "2.0.0-alpha2"}}
+ :paths ["src"]}
