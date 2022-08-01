@@ -144,7 +144,8 @@
    [:body
     [:nav.navbar {:role "navigation" :aria-label "main navigation"}
      [:div.navbar-brand
-      [:h1.title.px-5.py-4 "Autosummarized HN"]]
+      [:h1.title.px-5.py-4
+       [:a {:href "index.html"} "Autosummarized HN"]]]
      [:div.navbar-menu.is-active
       [:div.navbar-start
        [:a.navbar-item {:href "about.html"} "About"]
