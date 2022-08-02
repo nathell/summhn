@@ -16,7 +16,7 @@
 (defn download-error-handler
   [error options context]
   (log/warnf "[download] Ignoring failed download: %s" error)
-  (skyscraper/respond-with {:headers {}, :body ""} options context))
+  (skyscraper/respond-with {:status 200, :headers {}, :body (.getBytes "")} options context))
 
 (defn parse-json [headers body _ctx]
   (json/parse-string (skyscraper/parse-string headers body _ctx) true))
