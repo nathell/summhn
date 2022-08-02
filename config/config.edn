@@ -4,4 +4,4 @@
                       :prompt      "Summarize the following article in one sentence: %s\n\n"}
  :max-article-length 3000
  :num-stories        30
- :output-directory   "out/"}
+ :output-directory   "out"}
