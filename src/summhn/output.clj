@@ -11,7 +11,7 @@
     [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
     [:title "Autosummarized HN"]
     [:link {:rel "stylesheet" :href "https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"}]
-    [:base {:href "https://danieljanus.pl/autosummarized-hn/"}]]
+    [:base {:href (config/get :deploy-url)}]]
    [:body
     [:nav.navbar {:role "navigation" :aria-label "main navigation"}
      [:div.navbar-brand

@@ -23,7 +23,7 @@
     {:content-type :json
      :accept       :json
      :headers      {"Authorization" (str "Bearer " (config/get :openai :key))}
-     :body         (json/encode {:model       "text-davinci-002"
+     :body         (json/encode {:model       (config/get :openai :model)
                                  :prompt      prompt
                                  :temperature temperature
                                  :max_tokens  max-tokens})})))

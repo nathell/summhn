@@ -1,7 +1,9 @@
 {:openai             {:key         #env "OPENAI_KEY"
+                      :model       "text-davinci-002"
                       :temperature 0.4
                       :max-tokens  100
                       :prompt      "Summarize the following article in one sentence: %s\n\n"}
+ :deploy-url         "https://danieljanus.pl/autosummarized-hn/"
  :max-article-length 3000
  :num-stories        30
  :output-directory   "out"}
