@@ -1,10 +1,11 @@
 (ns summhn.core
-  (:require [clj-http.client :as http]
-            [cheshire.core :as json]
+  (:require [cheshire.core :as json]
+            [clj-http.client :as http]
             [clojure.string :as str]
+            [hiccup2.core :as hiccup]
             [skyscraper.core :as skyscraper]
-            [taoensso.timbre :refer [warnf]]
-            [hiccup2.core :as hiccup]))
+            [summhn.config :as config]
+            [taoensso.timbre :refer [warnf]]))
 
 (defn postprocess [el]
   (let [companion (kotlin.reflect.full.KClasses/getCompanionObjectInstance
@@ -19,9 +20,6 @@
                   first)]
     (postprocess best)))
 
-(def openai-key
-  "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")
-
 (defn parse-response [resp]
   (some-> resp
           :body
@@ -30,8 +28,6 @@
           first
           :text
           str/trim))
-
-(def max-length 3000)
 
 (defn index-seq
   ([s c] (index-seq s c 0))
@@ -42,12 +38,13 @@
                       (index-seq s c (inc idx))))))))
 
 (defn start [article]
-  (let [indices (map inc
+  (let [max-article-length (config/get :max-article-length)
+        indices (map inc
                      (sort (concat (index-seq article ".")
                                    (index-seq article "?")
                                    (index-seq article "!"))))
-        n (or (last (take-while #(< % max-length) indices))
-              (min max-length (count article)))]
+        n (or (last (take-while #(< % max-article-length) indices))
+              (min max-article-length (count article)))]
     (subs article 0 n)))
 
 (defn openai-call [{:keys [temperature max-tokens prompt]
@@ -58,7 +55,7 @@
     "https://api.openai.com/v1/completions"
     {:content-type :json
      :accept       :json
-     :headers      {"Authorization" (str "Bearer " openai-key)}
+     :headers      {"Authorization" (str "Bearer " (config/get :openai :key))}
      :body         (json/encode {:model       "text-davinci-002"
                                  :prompt      prompt
                                  :temperature temperature
@@ -78,17 +75,16 @@
     :not-html))
 
 (defn summarize [story]
-  (openai-call {:temperature 0.4
-                :prompt (str "Summarize the following article in one sentence: " (start story) "\n\n")}))
+  (openai-call {:temperature (config/get :openai :temperature)
+                :prompt      (format (config/get :openai :prompt) (start story))
+                :max-tokens  (config/get :openai :max-tokens)}))
 
 (def hn-api-prefix "https://hacker-news.firebaseio.com/v0/")
-
-(def num-stories 30)
 
 (skyscraper/defprocessor ::stories
   :parse-fn parse-json
   :process-fn (fn [res _ctx]
-                (for [item (take num-stories res)]
+                (for [item (take (config/get :num-stories) res)]
                   {:item item
                    :url (str hn-api-prefix "item/" item ".json")
                    :processor ::story-meta})))
@@ -112,7 +108,7 @@
                                   (try
                                     (summarize story)
                                     (catch Exception e
-                                      (warnf "Summarize error: %s" (:item _ctx))
+                                      (warnf e "Summarize error: %s" (:item _ctx))
                                       nil)))]
                     {:story story, :summary summary}))))
 
@@ -161,11 +157,11 @@
       [:p.block.is-size-6
        [:em "All summaries have been generated automatically by GPT-3. No responsibility is claimed for their contents nor its accuracy."]]
       [:ol.items
-       (for [{:keys [title score by xurl item summary] :as entry} items
+       (for [{:keys [title time score by xurl item summary] :as entry} items
              :let [hn-url (str "https://news.ycombinator.com/item?id=" item)]]
          [:li.item.block
           [:p.title.is-4.mb-0 [:a {:href (or xurl hn-url)} title]]
-          [:p.block score " points by " by " | " [:a {:href hn-url} "view on HN"]]
+          [:p.block "posted on " (str (java.util.Date. (* time 1000))) " by " by " | " [:a {:href hn-url} "view on HN"]]
           [:p.subtitle.is-5 summary]])]]))
 
 (defn about []
